@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="style.css">
     <script src="main.js"></script>
 
+    <style>
+        .stat-box[onclick] {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-box[onclick]:hover {
+            background: #2a9d8f !important;
+            transform: translateY(-5px);
+        }
+        .stat-box[onclick]:hover i,
+        .stat-box[onclick]:hover .number,
+        .stat-box[onclick]:hover .label {
+            color: white !important;
+        }
+    </style>
+
     <!--Email Script-->
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
