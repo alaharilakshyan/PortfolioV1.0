@@ -1,35 +1,24 @@
-// Simple fade-in on scroll for sections and work cards
-function fadeInOnScroll(selector, visibleClass = "visible") {
-    const elements = document.querySelectorAll(selector);
+document.addEventListener('DOMContentLoaded', () => {
+    // AOS Initialization
+    AOS.init({
+        duration: 1000,
+        once: true,
+    });
 
-    function checkVisibility() {
-        const triggerBottom = window.innerHeight * 0.92;
-        elements.forEach(el => {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < triggerBottom) {
-                el.classList.add(visibleClass);
-            } else {
-                el.classList.remove(visibleClass);
-            }
-        });
-    }
+    // Theme Switcher
+    const themeSwitcher = document.querySelector('.theme-switcher');
+    const body = document.body;
 
-    window.addEventListener("scroll", checkVisibility);
-    window.addEventListener("resize", checkVisibility);
-    document.addEventListener("DOMContentLoaded", checkVisibility);
-}
+    themeSwitcher.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        if (body.classList.contains('dark-mode')) {
+            themeSwitcher.innerHTML = '<i class="ri-moon-line"></i>';
+        } else {
+            themeSwitcher.innerHTML = '<i class="ri-sun-line"></i>';
+        }
+    });
 
-// Fade in sections
-fadeInOnScroll("section");
-
-// Fade in project items
-fadeInOnScroll(".project-item");
-
-// Fade in work cards
-fadeInOnScroll(".work-card");
-
-// Navigation active state
-function setupNavigation() {
+    // Navigation active state
     const navItems = document.querySelectorAll('.nav-item');
     const sections = document.querySelectorAll('section');
 
@@ -66,20 +55,11 @@ function setupNavigation() {
             });
         });
     });
-}
 
-// Make stat-box clickable
-function setupStatBoxes() {
-    document.querySelectorAll('.stat-box').forEach(box => {
-        box.addEventListener('click', function() {
-            if (this.querySelector('a')) {
-                window.location.href = this.querySelector('a').href;
-            }
-        });
-    });
-}
+    // Contact Form Handling (from old main.js)
+    setupContactForm();
+});
 
-// Contact Form Handling
 function setupContactForm() {
     const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
@@ -108,47 +88,44 @@ function setupContactForm() {
             }
 
             // Email validation
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            if (!/^[^S@]+S[^S@]+S[^S@]+$/.test(formData.email)) {
                 throw new Error('Please enter a valid email address');
             }
 
-            // Send email using EmailJS
+            // EmailJS integration
+            (function(){
+                emailjs.init({
+                    publicKey: "UMj55DorNyy-sC8Tk",
+                });
+            })();
+            
             await emailjs.send("service_p4k8tjw", "template_us9jypu", formData);
             
-            // Show success message
             showNotification('success', 'Message sent successfully! I\'ll get back to you soon.');
             
-            // Reset form
             contactForm.reset();
         } catch (error) {
             console.error('Error:', error);
             showNotification('error', error.message || 'There was an error sending your message. Please try again.');
         } finally {
-            // Reset button state
             submitBtn.disabled = false;
             submitBtn.textContent = 'Send Message';
         }
     });
 
     function showNotification(type, message) {
-        // Clear previous notifications
         notificationArea.innerHTML = '';
         
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         
-        // Add icon based on type
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
-        notification.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+        const icon = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+        notification.innerHTML = `<i class="${icon}"></i> ${message}`;
         
-        // Add to DOM
         notificationArea.appendChild(notification);
         
-        // Show notification
         notification.classList.add('show');
         
-        // Auto-hide after 5 seconds
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => {
@@ -157,31 +134,3 @@ function setupContactForm() {
         }, 5000);
     }
 }
-
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    setupNavigation();
-    setupStatBoxes();
-    setupContactForm();
-
-    // Animate section header
-    const header = document.querySelector('.section-header');
-    if (header) {
-        header.style.opacity = '0';
-        header.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            header.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-            header.style.opacity = '1';
-            header.style.transform = 'translateY(0)';
-        }, 300);
-    }
-
-    // Animate work items with staggered delay
-    const workItems = document.querySelectorAll('.work-timeline-item');
-    workItems.forEach((item, index) => {
-        setTimeout(() => {
-            item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            item.classList.add('animate');
-        }, 300 + (index * 200));
-    });
-});
