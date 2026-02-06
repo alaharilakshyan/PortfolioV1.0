@@ -9,14 +9,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeSwitcher = document.querySelector('.theme-switcher');
     const body = document.body;
 
-    themeSwitcher.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        if (body.classList.contains('dark-mode')) {
-            themeSwitcher.innerHTML = '<i class="ri-moon-line"></i>';
-        } else {
-            themeSwitcher.innerHTML = '<i class="ri-sun-line"></i>';
+    const applyTheme = (isDark) => {
+        body.classList.toggle('dark-mode', isDark);
+        if (themeSwitcher) {
+            themeSwitcher.innerHTML = isDark
+                ? '<i class="ri-moon-line"></i>'
+                : '<i class="ri-sun-line"></i>';
         }
-    });
+    };
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        applyTheme(true);
+    } else if (savedTheme === 'light') {
+        applyTheme(false);
+    } else {
+        applyTheme(body.classList.contains('dark-mode'));
+    }
+
+    if (themeSwitcher) {
+        themeSwitcher.addEventListener('click', () => {
+            const nextIsDark = !body.classList.contains('dark-mode');
+            applyTheme(nextIsDark);
+            localStorage.setItem('theme', nextIsDark ? 'dark' : 'light');
+        });
+    }
 
     // Navigation active state
     const navItems = document.querySelectorAll('.nav-item');
@@ -66,6 +83,24 @@ function setupContactForm() {
 
     const notificationArea = document.getElementById('notificationArea');
     const submitBtn = document.getElementById('submitBtn');
+    const messageField = document.getElementById('message');
+    const charCounter = document.getElementById('charCounter');
+
+    // Character counter functionality
+    if (messageField && charCounter) {
+        messageField.addEventListener('input', () => {
+            const currentLength = messageField.value.length;
+            charCounter.textContent = `${currentLength}/500`;
+            
+            if (currentLength > 500) {
+                charCounter.style.color = '#ef4444';
+            } else if (currentLength < 10) {
+                charCounter.style.color = '#f59e0b';
+            } else {
+                charCounter.style.color = 'var(--text-light-secondary)';
+            }
+        });
+    }
 
     contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -86,10 +121,18 @@ function setupContactForm() {
             if (!formData.name || !formData.email || !formData.message) {
                 throw new Error('Please fill all required fields');
             }
-
-            // Email validation
-            if (!/^[^S@]+S[^S@]+S[^S@]+$/.test(formData.email)) {
-                throw new Error('Please enter a valid email address');
+            
+            // Enhanced validation with character limits
+            if (formData.name.length < 2) {
+                throw new Error('Name must be at least 2 characters long');
+            }
+            
+            if (formData.message.length < 10) {
+                throw new Error('Message must be at least 10 characters long');
+            }
+            
+            if (formData.message.length > 500) {
+                throw new Error('Message must be less than 500 characters');
             }
 
             // EmailJS integration
