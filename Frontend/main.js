@@ -81,10 +81,28 @@ function setupContactForm() {
     const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
 
-    const notificationArea = document.getElementById('notificationArea');
+    let notificationArea = document.getElementById('notificationArea');
+    if (!notificationArea) {
+        notificationArea = document.createElement('div');
+        notificationArea.id = 'notificationArea';
+        contactForm.parentElement?.insertBefore(notificationArea, contactForm);
+    }
     const submitBtn = document.getElementById('submitBtn');
     const messageField = document.getElementById('message');
     const charCounter = document.getElementById('charCounter');
+
+    const EMAILJS_PUBLIC_KEY = 'UMj55DorNyy-sC8Tk';
+    const EMAILJS_SERVICE_ID = 'service_p4k8tjw';
+    const EMAILJS_TEMPLATE_ID = 'template_us9jypu';
+
+    const canUseEmailJs = typeof window !== 'undefined' && typeof window.emailjs !== 'undefined';
+    if (canUseEmailJs) {
+        try {
+            window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        } catch (e) {
+            console.error('EmailJS init failed:', e);
+        }
+    }
 
     // Character counter functionality
     if (messageField && charCounter) {
@@ -104,10 +122,12 @@ function setupContactForm() {
 
     contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="btn-loader"></span> Sending...';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="btn-loader"></span> Sending...';
+        }
         
         try {
             const formData = {
@@ -135,14 +155,22 @@ function setupContactForm() {
                 throw new Error('Message must be less than 500 characters');
             }
 
-            // EmailJS integration
-            (function(){
-                emailjs.init({
-                    publicKey: "UMj55DorNyy-sC8Tk",
-                });
-            })();
-            
-            await emailjs.send("service_p4k8tjw", "template_us9jypu", formData);
+            if (!canUseEmailJs) {
+                throw new Error('Email service not loaded. Please refresh the page and try again.');
+            }
+
+            // EmailJS payload: includes common template keys + original keys for compatibility
+            const templateParams = {
+                from_name: formData.name,
+                reply_to: formData.email,
+                from_email: formData.email,
+                subject: formData.subject,
+                message: formData.message,
+                name: formData.name,
+                email: formData.email
+            };
+
+            await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
             
             showNotification('success', 'Message sent successfully! I\'ll get back to you soon.');
             
@@ -151,8 +179,10 @@ function setupContactForm() {
             console.error('Error:', error);
             showNotification('error', error.message || 'There was an error sending your message. Please try again.');
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Message';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
         }
     });
 
